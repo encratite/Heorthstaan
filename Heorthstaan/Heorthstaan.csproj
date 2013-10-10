@@ -35,6 +35,9 @@
     <Reference Include="HtmlAgilityPack">
       <HintPath>..\References\HtmlAgilityPack.dll</HintPath>
     </Reference>
+    <Reference Include="NDatabase3">
+      <HintPath>..\References\NDatabase3.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -46,6 +49,7 @@
   <ItemGroup>
     <Compile Include="DeckLoader.cs" />
     <Compile Include="DeckLoaderException.cs" />
+    <Compile Include="LoaderState.cs" />
     <Compile Include="Programme.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
