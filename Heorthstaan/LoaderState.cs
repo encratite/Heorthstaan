@@ -1,12 +1,14 @@
-﻿namespace Heorthstaan
+﻿using System.Collections.Generic;
+
+namespace Heorthstaan
 {
 	class LoaderState
 	{
-		public int CurrentPage;
+		public HashSet<int> ProcessedPages;
 
 		public LoaderState()
 		{
-			CurrentPage = 1;
+			ProcessedPages = new HashSet<int>();
 		}
 	}
 }
