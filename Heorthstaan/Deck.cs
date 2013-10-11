@@ -19,13 +19,14 @@ namespace Heorthstaan
 	{
 		public string Path;
 		public Class Class;
-		public List<Card> Cards;
+		// Card IDs
+		public List<int> Cards;
 
 		public Deck(string path, Class deckClass)
 		{
 			Path = path;
 			Class = deckClass;
-			Cards = new List<Card>();
+			Cards = new List<int>();
 		}
 	}
 }

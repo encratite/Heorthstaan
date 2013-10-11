@@ -155,7 +155,6 @@ namespace Heorthstaan
 				string deckPath = link.Attributes["href"].Value;
 				ProcessDeck(deckPath);
 			}
-			/*
 			lock(LoaderState)
 			{
 				LoaderState.ProcessedPages.Add(page);
@@ -165,7 +164,6 @@ namespace Heorthstaan
 					Database.Commit();
 				}
 			}
-			*/
 		}
 
 		Class GetClass(string classString)
@@ -188,6 +186,14 @@ namespace Heorthstaan
 			return deck.Count() > 0;
 		}
 
+		bool CardIsInDatabase(Card card)
+		{
+			var result = from x in Database.AsQueryable<Card>()
+						 where x.Id == card.Id
+						 select x;
+			return result.Count() > 0;
+		}
+
 		CardType GetCardType(string input)
 		{ 
 			switch(input)
@@ -205,6 +211,8 @@ namespace Heorthstaan
 
 		void ProcessDeck(string path)
 		{
+			// Check if the deck is in the database yet
+			// If it is, skip it right away to avoid doing unnecessary work
 			lock (Database)
 			{
 				if (DeckIsInDatabase(path))
@@ -223,14 +231,37 @@ namespace Heorthstaan
 			if(rows.Count == 0)
 				throw new DeckLoaderException("Unable to detect cards in deck");
 			Deck deck = new Deck(path, deckClass);
+			List<Card> cards = new List<Card>();
 			foreach (var row in rows)
 			{
-				Card card = ParseCard(row);
-				deck.Cards.Add(card);
+				int? count = null;
+				Card card = ParseCard(row, ref count);
+				for (int i = 0; i < count; i++)
+					deck.Cards.Add(card.Id);
+				cards.Add(card);
+			}
+			// Store the results in the database
+			// Check if the deck is in the database yet once again, just to make sure it was not already dealt with by another worker
+			// This can happen due to updates on the site
+			lock (Database)
+			{
+				if (DeckIsInDatabase(path))
+				{
+					Print("Skipping deck {0} (delayed)", path);
+					return;
+				}
+				Database.Store(deck);
+				foreach (var card in cards)
+				{
+					if (CardIsInDatabase(card))
+						continue;
+					Database.Store(card);
+				}
+				Database.Commit();
 			}
 		}
 
-		Card ParseCard(HtmlNode row)
+		Card ParseCard(HtmlNode row, ref int? count)
 		{
 			var link = row.SelectSingleNode(".//a[@href and @class]");
 			if (link == null)
@@ -305,11 +336,14 @@ namespace Heorthstaan
 			{
 				throw new DeckLoaderException("Unable to parse hit points", exception);
 			}
+			if (row.InnerText.IndexOf("× 2") >= 0)
+				count = 2;
+			else
+				count = 1;
 			if (type == CardType.Minion)
 				return Card.Minion(id, name, description, cardClass, rarity, manaCost, attack, hitPoints);
 			else
 				return Card.Ability(id, name, description, cardClass, rarity, manaCost);
-			// Count still missing
 		}
 	}
 }
