@@ -164,6 +164,7 @@ namespace Heorthstaan
 					Database.Commit();
 				}
 			}
+			Print("Processed page {0}", path);
 		}
 
 		Class GetClass(string classString)
@@ -178,23 +179,45 @@ namespace Heorthstaan
 			}
 		}
 
+		CardType GetCardType(string typeString)
+		{
+			try
+			{
+				return (CardType)Enum.Parse(typeof(CardType), typeString);
+			}
+			catch (ArgumentException exception)
+			{
+				throw new DeckLoaderException("Unable to parse type string", exception);
+			}
+		}
+
 		bool DeckIsInDatabase(string path)
 		{
+			/*
 			var deck = from x in Database.AsQueryable<Deck>()
 					   where x.Path == path
 					   select x;
-			return deck.Count() > 0;
+			*/
+			var query = Database.Query<Deck>();
+			query.Descend("Path").Constrain(path).Equal();
+			var results = query.Execute<Deck>();
+			return results.Count > 0;
 		}
 
 		bool CardIsInDatabase(Card card)
 		{
+			/*
 			var result = from x in Database.AsQueryable<Card>()
 						 where x.Id == card.Id
 						 select x;
-			return result.Count() > 0;
+			*/
+			var query = Database.Query<Card>();
+			query.Descend("Id").Constrain(card.Id).Equal();
+			var results = query.Execute<Card>();
+			return results.Count() > 0;
 		}
 
-		CardType GetCardType(string input)
+		CardType GetCardTypeS(string input)
 		{ 
 			switch(input)
 			{
@@ -227,8 +250,8 @@ namespace Heorthstaan
 			if (selection == null)
 				throw new DeckLoaderException("Unable to determine class of deck");
 			Class deckClass = GetClass(selection.InnerText);
-			var rows = document.DocumentNode.SelectNodes("//tr[@class = 'even' or @class = 'odd']");
-			if(rows.Count == 0)
+			var rows = document.DocumentNode.SelectNodes("//table[@id = 'cards'][1]//tbody//tr[@class = 'even' or @class = 'odd']");
+			if(rows == null)
 				throw new DeckLoaderException("Unable to detect cards in deck");
 			Deck deck = new Deck(path, deckClass);
 			List<Card> cards = new List<Card>();
@@ -240,6 +263,8 @@ namespace Heorthstaan
 					deck.Cards.Add(card.Id);
 				cards.Add(card);
 			}
+			if (cards.Count > 30)
+				throw new DeckLoaderException("Invalid deck size");
 			// Store the results in the database
 			// Check if the deck is in the database yet once again, just to make sure it was not already dealt with by another worker
 			// This can happen due to updates on the site
@@ -282,10 +307,11 @@ namespace Heorthstaan
 			if (rarityIndex >= rarityValues.Length)
 				throw new DeckLoaderException("Invalid card rarity specified");
 			CardRarity rarity = (CardRarity)rarityValues.GetValue(rarityIndex);
+			// Descriptions can actually be missing
+			string description = null;
 			var paragraph = row.SelectSingleNode(".//p");
-			if (paragraph == null)
-				throw new DeckLoaderException("Unable to extract card description");
-			string description = paragraph.InnerText.Trim();
+			if (paragraph != null)
+				description = paragraph.InnerText.Trim();
 			Class? cardClass = null;
 			var classCell = row.SelectSingleNode(".//span[starts-with(@class, 'class-')]");
 			if (classCell != null)

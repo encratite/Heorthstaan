@@ -13,6 +13,7 @@
 	{
 		Minion,
 		Ability,
+		Weapon,
 	}
 
 	class Card
