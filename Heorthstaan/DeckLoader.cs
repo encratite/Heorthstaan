@@ -247,10 +247,20 @@ namespace Heorthstaan
 				if(paragraph == null)
 					throw new DeckLoaderException("Unable to extract card description");
 				string description = paragraph.InnerText.Trim();
+				Class? cardClass = null;
+				var classCell = row.SelectSingleNode(".//span[starts-with(@class, 'class-')]");
+				if(classCell != null)
+				{
+					string lowerCaseString = classCell.Attributes["class"].Value.Substring("class-".Length);
+					if(lowerCaseString.Length == 0)
+						throw new DeckLoaderException("Invalid card class string");
+					string classString = lowerCaseString.Substring(0, 1).ToUpper() + lowerCaseString.Substring(1);
+					cardClass = GetClass(classString);
+				}
 				var descriptionCell = row.SelectSingleNode(".//td[@class = 'col-type']");
 				if (descriptionCell == null)
 					throw new DeckLoaderException("Unable to extract card type");
-				CardType cardType = GetCardType(descriptionCell.InnerText);
+				CardType type = GetCardType(descriptionCell.InnerText);
 				var manaCell = row.SelectSingleNode(".//td[@class = 'col-cost']");
 				if (manaCell == null)
 					throw new DeckLoaderException("Unable to extract mana cost");
@@ -262,6 +272,18 @@ namespace Heorthstaan
 				catch(Exception exception)
 				{
 					throw new DeckLoaderException("Unable to parse mana cost", exception);
+				}
+				var attackCell = row.SelectSingleNode(".//td[@class = 'col-attack']");
+				if (attackCell == null)
+					throw new DeckLoaderException("Unable to extract attack");
+				int attack;
+				try
+				{
+					attack = Convert.ToInt32(attackCell.InnerText);
+				}
+				catch (Exception exception)
+				{
+					throw new DeckLoaderException("Unable to parse attack", exception);
 				}
 				var hitPointsCell = row.SelectSingleNode(".//td[@class = 'col-hp']");
 				if (hitPointsCell == null)
@@ -275,6 +297,12 @@ namespace Heorthstaan
 				{
 					throw new DeckLoaderException("Unable to parse hit points", exception);
 				}
+				Card card;
+				if (type == CardType.Minion)
+					card = Card.Minion(id, name, description, cardClass, rarity, manaCost, attack, hitPoints);
+				else
+					card = Card.Ability(id, name, description, cardClass, rarity, manaCost);
+				// Count still missing
 			}
 		}
 	}
