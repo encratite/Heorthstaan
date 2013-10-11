@@ -222,88 +222,94 @@ namespace Heorthstaan
 			var rows = document.DocumentNode.SelectNodes("//tr[@class = 'even' or @class = 'odd']");
 			if(rows.Count == 0)
 				throw new DeckLoaderException("Unable to detect cards in deck");
-			Regex idPattern = new Regex("\\/cards\\/(\\d+)-.+?");
-			Regex rarityPattern = new Regex("\\d+");
-			var rarityValues = Enum.GetValues(typeof(CardRarity));
+			Deck deck = new Deck(path, deckClass);
 			foreach (var row in rows)
 			{
-				var link = row.SelectSingleNode(".//a[@href and @class]");
-				if(link == null)
-					throw new DeckLoaderException("Unable to retrieve ID and name of card");
-				Match idMatch = idPattern.Match(link.OuterHtml);
-				if(!idMatch.Success)
-					throw new DeckLoaderException("Unable to extract card ID");
-				int id = Convert.ToInt32(idMatch.Groups[1].Value);
-				string name = link.InnerText;
-				string rarityString = link.Attributes["class"].Value;
-				Match rarityMatch = rarityPattern.Match(rarityString);
-				if(!rarityMatch.Success)
-					throw new DeckLoaderException("Unable to extract card rarity");
-				int rarityIndex = Convert.ToInt32(rarityMatch.Groups[0].Value) - 1;
-				if(rarityIndex >= rarityValues.Length)
-					throw new DeckLoaderException("Invalid card rarity specified");
-				CardRarity rarity = (CardRarity)rarityValues.GetValue(rarityIndex);
-				var paragraph = row.SelectSingleNode(".//p");
-				if(paragraph == null)
-					throw new DeckLoaderException("Unable to extract card description");
-				string description = paragraph.InnerText.Trim();
-				Class? cardClass = null;
-				var classCell = row.SelectSingleNode(".//span[starts-with(@class, 'class-')]");
-				if(classCell != null)
-				{
-					string lowerCaseString = classCell.Attributes["class"].Value.Substring("class-".Length);
-					if(lowerCaseString.Length == 0)
-						throw new DeckLoaderException("Invalid card class string");
-					string classString = lowerCaseString.Substring(0, 1).ToUpper() + lowerCaseString.Substring(1);
-					cardClass = GetClass(classString);
-				}
-				var descriptionCell = row.SelectSingleNode(".//td[@class = 'col-type']");
-				if (descriptionCell == null)
-					throw new DeckLoaderException("Unable to extract card type");
-				CardType type = GetCardType(descriptionCell.InnerText);
-				var manaCell = row.SelectSingleNode(".//td[@class = 'col-cost']");
-				if (manaCell == null)
-					throw new DeckLoaderException("Unable to extract mana cost");
-				int manaCost;
-				try
-				{
-					manaCost = Convert.ToInt32(manaCell.InnerText);
-				}
-				catch(Exception exception)
-				{
-					throw new DeckLoaderException("Unable to parse mana cost", exception);
-				}
-				var attackCell = row.SelectSingleNode(".//td[@class = 'col-attack']");
-				if (attackCell == null)
-					throw new DeckLoaderException("Unable to extract attack");
-				int attack;
-				try
-				{
-					attack = Convert.ToInt32(attackCell.InnerText);
-				}
-				catch (Exception exception)
-				{
-					throw new DeckLoaderException("Unable to parse attack", exception);
-				}
-				var hitPointsCell = row.SelectSingleNode(".//td[@class = 'col-hp']");
-				if (hitPointsCell == null)
-					throw new DeckLoaderException("Unable to extract hit points");
-				int hitPoints;
-				try
-				{
-					hitPoints = Convert.ToInt32(hitPointsCell.InnerText);
-				}
-				catch (Exception exception)
-				{
-					throw new DeckLoaderException("Unable to parse hit points", exception);
-				}
-				Card card;
-				if (type == CardType.Minion)
-					card = Card.Minion(id, name, description, cardClass, rarity, manaCost, attack, hitPoints);
-				else
-					card = Card.Ability(id, name, description, cardClass, rarity, manaCost);
-				// Count still missing
+				Card card = ParseCard(row);
+				deck.Cards.Add(card);
 			}
+		}
+
+		Card ParseCard(HtmlNode row)
+		{
+			var link = row.SelectSingleNode(".//a[@href and @class]");
+			if (link == null)
+				throw new DeckLoaderException("Unable to retrieve ID and name of card");
+			Regex idPattern = new Regex("\\/cards\\/(\\d+)-.+?");
+			Match idMatch = idPattern.Match(link.OuterHtml);
+			if (!idMatch.Success)
+				throw new DeckLoaderException("Unable to extract card ID");
+			int id = Convert.ToInt32(idMatch.Groups[1].Value);
+			string name = link.InnerText;
+			string rarityString = link.Attributes["class"].Value;
+			Regex rarityPattern = new Regex("\\d+");
+			Match rarityMatch = rarityPattern.Match(rarityString);
+			if (!rarityMatch.Success)
+				throw new DeckLoaderException("Unable to extract card rarity");
+			int rarityIndex = Convert.ToInt32(rarityMatch.Groups[0].Value) - 1;
+			var rarityValues = Enum.GetValues(typeof(CardRarity));
+			if (rarityIndex >= rarityValues.Length)
+				throw new DeckLoaderException("Invalid card rarity specified");
+			CardRarity rarity = (CardRarity)rarityValues.GetValue(rarityIndex);
+			var paragraph = row.SelectSingleNode(".//p");
+			if (paragraph == null)
+				throw new DeckLoaderException("Unable to extract card description");
+			string description = paragraph.InnerText.Trim();
+			Class? cardClass = null;
+			var classCell = row.SelectSingleNode(".//span[starts-with(@class, 'class-')]");
+			if (classCell != null)
+			{
+				string lowerCaseString = classCell.Attributes["class"].Value.Substring("class-".Length);
+				if (lowerCaseString.Length == 0)
+					throw new DeckLoaderException("Invalid card class string");
+				string classString = lowerCaseString.Substring(0, 1).ToUpper() + lowerCaseString.Substring(1);
+				cardClass = GetClass(classString);
+			}
+			var descriptionCell = row.SelectSingleNode(".//td[@class = 'col-type']");
+			if (descriptionCell == null)
+				throw new DeckLoaderException("Unable to extract card type");
+			CardType type = GetCardType(descriptionCell.InnerText);
+			var manaCell = row.SelectSingleNode(".//td[@class = 'col-cost']");
+			if (manaCell == null)
+				throw new DeckLoaderException("Unable to extract mana cost");
+			int manaCost;
+			try
+			{
+				manaCost = Convert.ToInt32(manaCell.InnerText);
+			}
+			catch (Exception exception)
+			{
+				throw new DeckLoaderException("Unable to parse mana cost", exception);
+			}
+			var attackCell = row.SelectSingleNode(".//td[@class = 'col-attack']");
+			if (attackCell == null)
+				throw new DeckLoaderException("Unable to extract attack");
+			int attack;
+			try
+			{
+				attack = Convert.ToInt32(attackCell.InnerText);
+			}
+			catch (Exception exception)
+			{
+				throw new DeckLoaderException("Unable to parse attack", exception);
+			}
+			var hitPointsCell = row.SelectSingleNode(".//td[@class = 'col-hp']");
+			if (hitPointsCell == null)
+				throw new DeckLoaderException("Unable to extract hit points");
+			int hitPoints;
+			try
+			{
+				hitPoints = Convert.ToInt32(hitPointsCell.InnerText);
+			}
+			catch (Exception exception)
+			{
+				throw new DeckLoaderException("Unable to parse hit points", exception);
+			}
+			if (type == CardType.Minion)
+				return Card.Minion(id, name, description, cardClass, rarity, manaCost, attack, hitPoints);
+			else
+				return Card.Ability(id, name, description, cardClass, rarity, manaCost);
+			// Count still missing
 		}
 	}
 }
