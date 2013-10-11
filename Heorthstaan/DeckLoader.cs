@@ -25,7 +25,7 @@ namespace Heorthstaan
 
 		HashSet<int> UnprocessedPages;
 
-		public DeckLoader(int threadCount = 10)
+		public DeckLoader(int threadCount)
 		{
 			Database = OdbFactory.Open(DatabasePath);
 			ThreadCount = threadCount;
@@ -49,7 +49,7 @@ namespace Heorthstaan
 					UnprocessedPages.Add(page);
 			}
 			List<Thread> threads = new List<Thread>();
-			for (int i = 0; i < ThreadCount; i++)
+			for (int i = 1; i <= ThreadCount; i++)
 			{
 				Thread thread = new Thread(RunWorker);
 				thread.Name = string.Format("Worker {0}", i);
@@ -188,6 +188,21 @@ namespace Heorthstaan
 			return deck.Count() > 0;
 		}
 
+		CardType GetCardType(string input)
+		{ 
+			switch(input)
+			{
+				case "Minion":
+					return CardType.Minion;
+
+				case "Ability":
+					return CardType.Ability;
+
+				default:
+					throw new DeckLoaderException("Unable to parse card type");
+			}
+		}
+
 		void ProcessDeck(string path)
 		{
 			lock (Database)
@@ -200,11 +215,67 @@ namespace Heorthstaan
 			}
 			Print("Processing deck {0}", path);
 			HtmlDocument document = GetDocument(path);
-			var selection = document.DocumentNode.SelectNodes("//li[@class = 'b-breadcrumb-item'][2]//span");
-			if (selection.Count == 0)
+			var selection = document.DocumentNode.SelectSingleNode("//li[@class = 'b-breadcrumb-item'][2]//span");
+			if (selection == null)
 				throw new DeckLoaderException("Unable to determine class of deck");
-			string classString = selection.First().InnerText;
-			Class deckClass = GetClass(classString);
+			Class deckClass = GetClass(selection.InnerText);
+			var rows = document.DocumentNode.SelectNodes("//tr[@class = 'even' or @class = 'odd']");
+			if(rows.Count == 0)
+				throw new DeckLoaderException("Unable to detect cards in deck");
+			Regex idPattern = new Regex("\\/cards\\/(\\d+)-.+?");
+			Regex rarityPattern = new Regex("\\d+");
+			var rarityValues = Enum.GetValues(typeof(CardRarity));
+			foreach (var row in rows)
+			{
+				var link = row.SelectSingleNode(".//a[@href and @class]");
+				if(link == null)
+					throw new DeckLoaderException("Unable to retrieve ID and name of card");
+				Match idMatch = idPattern.Match(link.OuterHtml);
+				if(!idMatch.Success)
+					throw new DeckLoaderException("Unable to extract card ID");
+				int id = Convert.ToInt32(idMatch.Groups[1].Value);
+				string name = link.InnerText;
+				string rarityString = link.Attributes["class"].Value;
+				Match rarityMatch = rarityPattern.Match(rarityString);
+				if(!rarityMatch.Success)
+					throw new DeckLoaderException("Unable to extract card rarity");
+				int rarityIndex = Convert.ToInt32(rarityMatch.Groups[0].Value) - 1;
+				if(rarityIndex >= rarityValues.Length)
+					throw new DeckLoaderException("Invalid card rarity specified");
+				CardRarity rarity = (CardRarity)rarityValues.GetValue(rarityIndex);
+				var paragraph = row.SelectSingleNode(".//p");
+				if(paragraph == null)
+					throw new DeckLoaderException("Unable to extract card description");
+				string description = paragraph.InnerText.Trim();
+				var descriptionCell = row.SelectSingleNode(".//td[@class = 'col-type']");
+				if (descriptionCell == null)
+					throw new DeckLoaderException("Unable to extract card type");
+				CardType cardType = GetCardType(descriptionCell.InnerText);
+				var manaCell = row.SelectSingleNode(".//td[@class = 'col-cost']");
+				if (manaCell == null)
+					throw new DeckLoaderException("Unable to extract mana cost");
+				int manaCost;
+				try
+				{
+					manaCost = Convert.ToInt32(manaCell.InnerText);
+				}
+				catch(Exception exception)
+				{
+					throw new DeckLoaderException("Unable to parse mana cost", exception);
+				}
+				var hitPointsCell = row.SelectSingleNode(".//td[@class = 'col-hp']");
+				if (hitPointsCell == null)
+					throw new DeckLoaderException("Unable to extract hit points");
+				int hitPoints;
+				try
+				{
+					hitPoints = Convert.ToInt32(hitPointsCell.InnerText);
+				}
+				catch (Exception exception)
+				{
+					throw new DeckLoaderException("Unable to parse hit points", exception);
+				}
+			}
 		}
 	}
 }

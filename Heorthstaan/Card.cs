@@ -17,6 +17,7 @@
 
 	class Card
 	{
+		public int Id;
 		public string Name;
 		// Class is null for neutral cards
 		public Class? Class;
@@ -27,8 +28,9 @@
 		public int? Attack;
 		public int? HitPoints;
 
-		Card(string name, Class? cardClass, CardRarity rarity, CardType type, int manaCost, int? attack, int? hitPoints)
+		Card(int id, string name, Class? cardClass, CardRarity rarity, CardType type, int manaCost, int? attack, int? hitPoints)
 		{
+			Id = id;
 			Name = name;
 			Class = cardClass;
 			Rarity = rarity;
@@ -38,14 +40,14 @@
 			HitPoints = hitPoints;
 		}
 
-		public static Card Minion(string name, Class? cardClass, CardRarity rarity, int manaCost, int attack, int hitPoints)
+		public static Card Minion(int id, string name, Class? cardClass, CardRarity rarity, int manaCost, int attack, int hitPoints)
 		{
-			return new Card(name, cardClass, rarity, CardType.Minion, manaCost, attack, hitPoints);
+			return new Card(id, name, cardClass, rarity, CardType.Minion, manaCost, attack, hitPoints);
 		}
 
-		public static Card Ability(string name, Class? cardClass, CardRarity rarity, int manaCost)
+		public static Card Ability(int id, string name, Class? cardClass, CardRarity rarity, int manaCost)
 		{
-			return new Card(name, cardClass, rarity, CardType.Ability, manaCost, null, null);
+			return new Card(id, name, cardClass, rarity, CardType.Ability, manaCost, null, null);
 		}
 	}
 }
