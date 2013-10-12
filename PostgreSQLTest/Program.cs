@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 using System.Data.Entity;
 using System.Linq;
 
@@ -27,15 +29,31 @@ namespace EntityFrameworkTest
 	class Context : DbContext
 	{
 		public DbSet<Sample> Samples { get; set; }
+
+		public Context()
+		{
+		}
 	}
 
 	class Program
 	{
+		static void RunPostgresTest()
+		{
+			var factory = DbProviderFactories.GetFactory("Npgsql");
+			using (var connection = (NpgsqlConnection)factory.CreateConnection())
+			{
+				connection.ConnectionString = "Host = 127.0.0.1; User Id = void; Database = test";
+				connection.Open();
+				NpgsqlCommand command = new NpgsqlCommand("select version()", connection);
+				String version = (String)command.ExecuteScalar();
+			}
+		}
+
 		static void Main(string[] arguments)
 		{
+			RunPostgresTest();
 			using (Context context = new Context())
 			{
-				context.Database.CreateIfNotExists();
 				Sample sample = new Sample(123, "string", true);
 				context.Samples.Add(sample);
 				context.SaveChanges();
