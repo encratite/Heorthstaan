@@ -193,43 +193,18 @@ namespace Heorthstaan
 
 		bool DeckIsInDatabase(string path)
 		{
-			/*
-			var deck = from x in Database.AsQueryable<Deck>()
+			var results = from x in Database.AsQueryable<Deck>()
 					   where x.Path == path
 					   select x;
-			*/
-			var query = Database.Query<Deck>();
-			query.Descend("Path").Constrain(path).Equal();
-			var results = query.Execute<Deck>();
-			return results.Count > 0;
+			return results.Count() > 0;
 		}
 
 		bool CardIsInDatabase(Card card)
 		{
-			/*
-			var result = from x in Database.AsQueryable<Card>()
+			var results = from x in Database.AsQueryable<Card>()
 						 where x.Id == card.Id
 						 select x;
-			*/
-			var query = Database.Query<Card>();
-			query.Descend("Id").Constrain(card.Id).Equal();
-			var results = query.Execute<Card>();
 			return results.Count() > 0;
-		}
-
-		CardType GetCardTypeS(string input)
-		{ 
-			switch(input)
-			{
-				case "Minion":
-					return CardType.Minion;
-
-				case "Ability":
-					return CardType.Ability;
-
-				default:
-					throw new DeckLoaderException("Unable to parse card type");
-			}
 		}
 
 		void ProcessDeck(string path)

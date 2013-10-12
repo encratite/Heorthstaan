@@ -2,4 +2,6 @@ bin
 obj
 *.suo
 *.user
+packages/*
+!packages/repositories.config
 References
