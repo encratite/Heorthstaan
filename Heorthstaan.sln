@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSSQLTest", "EntityFramewor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgreSQLTest", "PostgreSQLTest\PostgreSQLTest.csproj", "{60BE0FDC-2F64-4043-93B5-EDAE5D71499C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySQLTest", "MySQLTest\MySQLTest.csproj", "{84F13133-3F05-4F38-8573-64EBA4408DE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{60BE0FDC-2F64-4043-93B5-EDAE5D71499C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{60BE0FDC-2F64-4043-93B5-EDAE5D71499C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{60BE0FDC-2F64-4043-93B5-EDAE5D71499C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84F13133-3F05-4F38-8573-64EBA4408DE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84F13133-3F05-4F38-8573-64EBA4408DE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84F13133-3F05-4F38-8573-64EBA4408DE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84F13133-3F05-4F38-8573-64EBA4408DE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

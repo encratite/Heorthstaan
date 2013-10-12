@@ -1,11 +1,12 @@
-﻿using Npgsql;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Data.Common;
 using System.Data.Entity;
 using System.Linq;
 
-namespace PostgreSQLTest
+using MySql.Data.MySqlClient;
+using System.Data.Common;
+
+namespace MySQLTest
 {
 	class Sample
 	{
@@ -29,31 +30,31 @@ namespace PostgreSQLTest
 	class Context : DbContext
 	{
 		public DbSet<Sample> Samples { get; set; }
-
-		public Context()
-		{
-		}
 	}
 
 	class Program
 	{
-		static void RunPostgresTest()
+		static void RunVersionTest(string connectionString)
 		{
-			var factory = DbProviderFactories.GetFactory("Npgsql");
-			using (var connection = (NpgsqlConnection)factory.CreateConnection())
+			var factory = DbProviderFactories.GetFactory("MySql.Data.MySqlClient");
+			using (var connection = (MySqlConnection)factory.CreateConnection())
 			{
-				connection.ConnectionString = "Host = 127.0.0.1; User Id = void; Database = test";
+				connection.ConnectionString = connectionString;
 				connection.Open();
-				NpgsqlCommand command = new NpgsqlCommand("select version()", connection);
+				MySqlCommand command = new MySqlCommand("select version()", connection);
 				String version = (String)command.ExecuteScalar();
 			}
 		}
 
 		static void Main(string[] arguments)
 		{
-			RunPostgresTest();
+			string connectionString = "Server = 127.0.0.1; User = void; Password =; Database = test";
+			// RunVersionTest(connectionString);
 			using (Context context = new Context())
 			{
+				// context.Database.Connection.ConnectionString = connectionString;
+				// context.Database.Connection.Open();
+				context.Database.CreateIfNotExists();
 				Sample sample = new Sample(123, "string", true);
 				context.Samples.Add(sample);
 				context.SaveChanges();
