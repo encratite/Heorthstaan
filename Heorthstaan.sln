@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgreSQLTest", "PostgreSQ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MySQLTest", "MySQLTest\MySQLTest.csproj", "{84F13133-3F05-4F38-8573-64EBA4408DE5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentNHibernateTest", "FluentNHibernateTest\FluentNHibernateTest.csproj", "{B4EF2F1C-6D2A-4808-9D4C-808B8F6F6C9E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{84F13133-3F05-4F38-8573-64EBA4408DE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84F13133-3F05-4F38-8573-64EBA4408DE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84F13133-3F05-4F38-8573-64EBA4408DE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4EF2F1C-6D2A-4808-9D4C-808B8F6F6C9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4EF2F1C-6D2A-4808-9D4C-808B8F6F6C9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4EF2F1C-6D2A-4808-9D4C-808B8F6F6C9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4EF2F1C-6D2A-4808-9D4C-808B8F6F6C9E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
