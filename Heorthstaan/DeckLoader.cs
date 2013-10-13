@@ -13,7 +13,6 @@ namespace Heorthstaan
 {
 	class DeckLoader: IDisposable
 	{
-		const string DatabasePath = "Heorthstaan.ndb";
 		const string WebSite = "http://www.hearthpwn.com";
 
 		IOdb Database;
@@ -25,9 +24,9 @@ namespace Heorthstaan
 
 		HashSet<int> UnprocessedPages;
 
-		public DeckLoader(int threadCount)
+		public DeckLoader(string databasePath, int threadCount)
 		{
-			Database = OdbFactory.Open(DatabasePath);
+			Database = OdbFactory.Open(databasePath);
 			ThreadCount = threadCount;
 		}
 
@@ -302,7 +301,7 @@ namespace Heorthstaan
 				throw new DeckLoaderException("Unable to extract card rarity");
 			int rarityIndex = Convert.ToInt32(rarityMatch.Groups[0].Value) - 1;
 			var rarityValues = Enum.GetValues(typeof(CardRarity));
-			if (rarityIndex >= rarityValues.Length)
+			if (rarityIndex < 0 || rarityIndex >= rarityValues.Length)
 				throw new DeckLoaderException("Invalid card rarity specified");
 			CardRarity rarity = (CardRarity)rarityValues.GetValue(rarityIndex);
 			// Descriptions can actually be missing
