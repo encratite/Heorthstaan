@@ -26,6 +26,19 @@ namespace Heorthstaan
 			Database.Dispose();
 		}
 
+		void UpdateCardFrequency(Card card, Class cardClass, Dictionary<Class, Dictionary<Card, int>> cardFrequency)
+		{
+			Dictionary<Card, int> cardFrequencyMap;
+			if (!cardFrequency.TryGetValue(cardClass, out cardFrequencyMap))
+			{
+				cardFrequencyMap = new Dictionary<Card, int>();
+				cardFrequency[cardClass] = cardFrequencyMap;
+			}
+			if (!cardFrequencyMap.ContainsKey(card))
+				cardFrequencyMap[card] = 0;
+			cardFrequencyMap[card]++;
+		}
+
 		public void Run()
 		{
 			Dictionary<int, Card> cardMap = new Dictionary<int, Card>();
@@ -34,7 +47,8 @@ namespace Heorthstaan
 			foreach (var card in cards)
 				cardMap[card.Id] = card;
 			Dictionary<int, int> manaMap = new Dictionary<int, int>();
-			Dictionary<Class, Dictionary<Card, int>> cardFrequency = new Dictionary<Class, Dictionary<Card, int>>();
+			Dictionary<Class, Dictionary<Card, int>> cardFrequencyByCardClass = new Dictionary<Class, Dictionary<Card, int>>();
+			Dictionary<Class, Dictionary<Card, int>> cardFrequencyByDeckClass = new Dictionary<Class, Dictionary<Card, int>>();
 			int cardCount = 0;
 			int counter = 1;
 			foreach (var deck in decks)
@@ -52,15 +66,8 @@ namespace Heorthstaan
 					if (!manaMap.ContainsKey(manaCost))
 						manaMap[manaCost] = 0;
 					manaMap[manaCost]++;
-					Dictionary<Card, int> cardFrequencyMap;
-					if(!cardFrequency.TryGetValue(card.Class, out cardFrequencyMap))
-					{
-						cardFrequencyMap = new Dictionary<Card, int>();
-						cardFrequency[card.Class] = cardFrequencyMap;
-					}
-					if (!cardFrequencyMap.ContainsKey(card))
-						cardFrequencyMap[card] = 0;
-					cardFrequencyMap[card]++;
+					UpdateCardFrequency(card, card.Class, cardFrequencyByCardClass);
+					UpdateCardFrequency(card, deck.Class, cardFrequencyByDeckClass);
 					cardCount++;
 				}
 				counter++;
@@ -79,30 +86,41 @@ namespace Heorthstaan
 					writer.WriteLine("{0}: {1}{2} {3}", mana.ToString().PadLeft(2, ' '), new string('=', count), new string(' ', offset - count), count);
 				}
 				writer.WriteLine("");
-				var classes = cardFrequency.Keys.ToList();
+				ProcessCardFrequency(cardFrequencyByCardClass, false, writer);
+				ProcessCardFrequency(cardFrequencyByDeckClass, true, writer);
+			}
+		}
+
+		void ProcessCardFrequency(Dictionary<Class, Dictionary<Card, int>> cardFrequency, bool isByDeck, StreamWriter writer)
+		{
+			var classes = cardFrequency.Keys.ToList();
+			if (!isByDeck)
 				classes.Remove(Class.Neutral);
-				classes.Sort((x, y) => x.ToString().CompareTo(y.ToString()));
+			classes.Sort((x, y) => x.ToString().CompareTo(y.ToString()));
+			if (!isByDeck)
 				classes.Insert(0, Class.Neutral);
-				foreach (var cardClass in classes)
-				{
+			foreach (var cardClass in classes)
+			{
+				if (isByDeck)
+					writer.WriteLine("Most common cards in {0} decks:", cardClass);
+				else
 					writer.WriteLine("Most common {0} cards:", cardClass);
-					List<Tuple<Card, int>> pairs = new List<Tuple<Card, int>>();
-					Dictionary<Card, int> cardFrequencyMap = cardFrequency[cardClass];
-					foreach (var pair in cardFrequencyMap)
-						pairs.Add(new Tuple<Card, int>(pair.Key, pair.Value));
-					pairs.Sort((x, y) => y.Item2.CompareTo(x.Item2));
-					int setSize = 0;
-					foreach (var pair in pairs)
-						setSize += pair.Item2;
-					int cardCounter = 1;
-					foreach (var pair in pairs)
-					{
-						double percentage = (double)pair.Item2 / setSize * 100.0;
-						writer.WriteLine("{0}. {1} ({2:0.0}%)", cardCounter, pair.Item1.Name, percentage);
-						cardCounter++;
-					}
-					writer.WriteLine("");
+				List<Tuple<Card, int>> pairs = new List<Tuple<Card, int>>();
+				Dictionary<Card, int> cardFrequencyMap = cardFrequency[cardClass];
+				foreach (var pair in cardFrequencyMap)
+					pairs.Add(new Tuple<Card, int>(pair.Key, pair.Value));
+				pairs.Sort((x, y) => y.Item2.CompareTo(x.Item2));
+				int setSize = 0;
+				foreach (var pair in pairs)
+					setSize += pair.Item2;
+				int cardCounter = 1;
+				foreach (var pair in pairs)
+				{
+					double percentage = (double)pair.Item2 / setSize * 100.0;
+					writer.WriteLine("{0}. {1} ({2:0.0}%)", cardCounter, pair.Item1.Name, percentage);
+					cardCounter++;
 				}
+				writer.WriteLine("");
 			}
 		}
 	}
