@@ -4,6 +4,8 @@ namespace Heorthstaan
 {
 	enum Class
 	{
+		// For neutral cards only, cannot apply to a deck
+		Neutral,
 		Druid,
 		Hunter,
 		Mage,

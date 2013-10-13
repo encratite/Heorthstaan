@@ -4,7 +4,7 @@
 	{
 		static void Main(string[] arguments)
 		{
-			DeckLoader loader = new DeckLoader(1);
+			DeckLoader loader = new DeckLoader(3);
 			loader.Load();
 		}
 	}

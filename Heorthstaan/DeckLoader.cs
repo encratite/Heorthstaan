@@ -153,7 +153,14 @@ namespace Heorthstaan
 			foreach (var link in links)
 			{
 				string deckPath = link.Attributes["href"].Value;
-				ProcessDeck(deckPath);
+				try
+				{
+					ProcessDeck(deckPath);
+				}
+				catch(DeckLoaderException exception)
+				{
+					Print("Failed to process {0}: {1}", deckPath, exception);
+				}
 			}
 			lock(LoaderState)
 			{
@@ -225,8 +232,24 @@ namespace Heorthstaan
 			if (selection == null)
 				throw new DeckLoaderException("Unable to determine class of deck");
 			Class deckClass = GetClass(selection.InnerText);
-			var rows = document.DocumentNode.SelectNodes("//table[@id = 'cards'][1]//tbody//tr[@class = 'even' or @class = 'odd']");
-			if(rows == null)
+			var tables = document.DocumentNode.SelectNodes("//table[@id = 'cards']");
+			if(tables == null)
+				throw new DeckLoaderException("Unable to detect deck tables");
+			foreach (var table in tables)
+			{
+				var undesirables = table.SelectNodes(".//td[@class = 'col-didnt-pick']");
+				if(undesirables != null)
+					continue;
+				ProcessCardTable(path, deckClass, table);
+				return;
+			}
+			throw new DeckLoaderException("Unable to find right table");
+		}
+
+		void ProcessCardTable(string path, Class deckClass, HtmlNode table)
+		{
+			var rows = table.SelectNodes(".//tbody//tr[@class = 'even' or @class = 'odd']");
+			if (rows == null)
 				throw new DeckLoaderException("Unable to detect cards in deck");
 			Deck deck = new Deck(path, deckClass);
 			List<Card> cards = new List<Card>();
@@ -287,7 +310,7 @@ namespace Heorthstaan
 			var paragraph = row.SelectSingleNode(".//p");
 			if (paragraph != null)
 				description = paragraph.InnerText.Trim();
-			Class? cardClass = null;
+			Class cardClass = Class.Neutral;
 			var classCell = row.SelectSingleNode(".//span[starts-with(@class, 'class-')]");
 			if (classCell != null)
 			{
@@ -341,10 +364,7 @@ namespace Heorthstaan
 				count = 2;
 			else
 				count = 1;
-			if (type == CardType.Minion)
-				return Card.Minion(id, name, description, cardClass, rarity, manaCost, attack, hitPoints);
-			else
-				return Card.Ability(id, name, description, cardClass, rarity, manaCost);
+			return new Card(id, name, description, cardClass, rarity, type, manaCost, attack, hitPoints);
 		}
 	}
 }

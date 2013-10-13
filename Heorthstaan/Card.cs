@@ -14,6 +14,7 @@
 		Minion,
 		Ability,
 		Weapon,
+		Hero,
 	}
 
 	class Card
@@ -22,15 +23,15 @@
 		public string Name;
 		public string Description;
 		// Class is null for neutral cards
-		public Class? Class;
+		public Class Class;
 		public CardRarity Rarity;
 		public CardType Type;
 		public int ManaCost;
 		// Attack and hit points are only specified for minion cards
-		public int? Attack;
-		public int? HitPoints;
+		public int Attack;
+		public int HitPoints;
 
-		Card(int id, string name, string description, Class? cardClass, CardRarity rarity, CardType type, int manaCost, int? attack, int? hitPoints)
+		public Card(int id, string name, string description, Class cardClass, CardRarity rarity, CardType type, int manaCost, int attack, int hitPoints)
 		{
 			Id = id;
 			Name = name;
@@ -41,16 +42,6 @@
 			ManaCost = manaCost;
 			Attack = attack;
 			HitPoints = hitPoints;
-		}
-
-		public static Card Minion(int id, string name, string description, Class? cardClass, CardRarity rarity, int manaCost, int attack, int hitPoints)
-		{
-			return new Card(id, name, description, cardClass, rarity, CardType.Minion, manaCost, attack, hitPoints);
-		}
-
-		public static Card Ability(int id, string name, string description, Class? cardClass, CardRarity rarity, int manaCost)
-		{
-			return new Card(id, name, description, cardClass, rarity, CardType.Ability, manaCost, null, null);
 		}
 	}
 }
